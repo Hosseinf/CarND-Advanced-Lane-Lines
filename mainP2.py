@@ -581,11 +581,11 @@ class Line():
 		# Use putText() method for 
 		# inserting text on video 
 		if car_pos_wrt_lane > 0:
-			dir = 'left '
+			dir = ' right '
 		else:
-			dir = 'right '
-		text1 = 'radius of the curve: ' + str(format(lane_radious, '.2f'))
-		text2 = dir + 'of center: ' + str(format(car_pos_wrt_lane, '.2f'))
+			dir = ' left '
+		text1 = 'radius of the curve: ' + str(format(np.absolute(lane_radious), '.2f')) + '(m)'
+		text2 = str(format(np.absolute(car_pos_wrt_lane), '.2f')) +'(m)'+ dir + 'of center'
 		cv2.putText(img,  
 		            text1,  
 		            (40,70),  
@@ -732,7 +732,7 @@ else:
 	# output video path
 	VideoOut = video_Dir + 'test_video_output/videos/challenge_video.avi'
 	# frame rate
-	fps = 15
+	fps = 20
 	# find the frame size
 	ret, frame = cap.read()
 	height, width, layers = frame.shape
