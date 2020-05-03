@@ -37,11 +37,11 @@ I then used the output `objpoints` and `imgpoints` to compute the camera calibra
 
 
 
-<img src="images_for_report/calib1.png" width="450" alt="calibration image1"/>  <img src="images_for_report/calib2.png" width="450" alt="calibration image2"/>
+<img src="images_for_report/calib1.png" width="450" alt="calibration image1"/>   <img src="images_for_report/calib2.png" width="450" alt="calibration image2"/>
 
 The image below depicts the results of applying undistort, using the calibration and distortion coefficients, to one of the chessboard images example
 
-<img src="images_for_report/orginalChart.png" width="450" alt="orginal image" title="orginal image"/>  <img src="images_for_report/undistorted.png" width="450" alt="undistorted image" title="undistorted image"/>
+<img src="images_for_report/orginalChart.png" width="450" alt="orginal image" title="orginal image"/>*orginal image*  <img src="images_for_report/undistorted.png" width="450" alt="undistorted image" title="undistorted image"/> *undistorted image*
 
 ### Pipeline (single images)
 
@@ -99,15 +99,15 @@ Then I did some other stuff and fit my lane lines with a 2nd order polynomial ki
 This process includes using the histogram to find the left and right lanes in the picture and then using sliding technique to create small windows enclosing the maximum pixel of the lanes such that the concentration of the pixel occurs at the middle of each window. Then create the data points from the pixel coordinates in all the sliding windows. After extracting the data points, I applied the polyfit function to generate a fit a second order polynomial on the data points. The results of the process are shown below.
 
 
-<img src="images_for_report/sliding_win.png" width="450" alt="sliding windows"/>
+<img src="images_for_report/sliding_win.png" width="650" alt="sliding windows"/>
 
 Next, in order to avoid calculating the sliding windows each time, I tried to narrow down the search area around the lane found in the last frame. This will help for computation time. There is a check in each iteration to make sure that the lane can be detected in the boundary, if it fails to find the lane in the boundary, it will try the sliding windows the technique again.
 
 
-<img src="images_for_report/search_around.png" width="450" alt="search boundary"/>
+<img src="images_for_report/search_around.png" width="650" alt="search boundary"/>
 
 #### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
-I defined a function “measure_curvature_pixels” to measure the curvature of the each lane line according to the following equation:
+I defined a function `measure_curvature_pixels` to measure the curvature of the each lane line according to the following equation:
 R_cuve=[(1+(2Ay+B)^2)]^(3⁄2)/|2A| 
 Where A and B are coefficients of a quadratic equation
 f(y)=Ay^2+By+C
@@ -130,7 +130,7 @@ car_pos_wrt_lane = car_center - mid_fit_poly
 
 I implemented this step in function “project_lane_line”. Here is an example of my result on a test image:
 
-<img src="images_for_report/final.png" width="450" alt="final"/>
+<img src="images_for_report/final.png" width="650" alt="final"/>
 
 ### Pipeline (video)
 
