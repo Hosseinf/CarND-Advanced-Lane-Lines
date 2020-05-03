@@ -37,39 +37,39 @@ I then used the output `objpoints` and `imgpoints` to compute the camera calibra
 
 
 
-<img src="images_for_report/calib.PNG" width="600" alt="calibration image1"/> 
+<img src="images_for_report/calib.PNG" width="800" alt="calibration image1"/> 
 
 The image below depicts the results of applying undistort, using the calibration and distortion coefficients, to one of the chessboard images example
 
-<img src="images_for_report/chart_distort.PNG" width="450" alt="undistorted image" title="undistorted image"/>
+<img src="images_for_report/chart_distort.PNG" width="800" alt="undistorted image" title="undistorted image"/>
 
 ### Pipeline (single images)
 
 #### 1. Example of a distortion-corrected image
 To undistort the warped image, I applied “cv2.undistort” from OpenCV and used the coefficients and transformation found from “cv2.calibrateCamera”. The following pictures show the undistorted image results.
 
-<img src="images_for_report/image_distort.PNG" width="600" alt="undistorted image" title="undistorted image"/>
+<img src="images_for_report/image_distort.PNG" width="800" alt="undistorted image" title="undistorted image"/>
 
 
 #### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 I defined two individual function for create a binary image for both gradient and color threshold.  “gradient_thresh” function takes the image and apply the gradient based on the different directions or combined input (x, y, magnitude, direction).
 
-<img src="images_for_report/grad_x.PNG" width="600" alt="sobel in x-direction"/>
+<img src="images_for_report/grad_x.PNG" width="800" alt="sobel in x-direction"/>
 
 “color_thresh” function takes the image and convert the image to HLS form. I tested different channel of HLS for different lighting condition.
 
-<img src="images_for_report/s_channel2.PNG" width="600" alt="S channel" title="S channel"/>
+<img src="images_for_report/s_channel2.PNG" width="800" alt="S channel" title="S channel"/>
 
-<img src="images_for_report/L_channel2.PNG" width="600" alt="L channel" title="L channel"/>
+<img src="images_for_report/L_channel2.PNG" width="800" alt="L channel" title="L channel"/>
 
 
 After testing for different lighting condition and different scenarios, I concluded that L-channel has the best affect on capturing the white lines while the other filter might pick the other part of the road as a lane. The only drawback of the L-channel is, it fails for capturing the other color like yellow. Therefore, to address this problem I used HSV filter to specifically address the yellow color.
 
-<img src="images_for_report/hsv_channel2.PNG" width="600" alt="HSV channel" title="HSV channel"/>
+<img src="images_for_report/hsv_channel2.PNG" width="800" alt="HSV channel" title="HSV channel"/>
 
 Then, I combined the HLS and HLV results for final results.
 
-<img src="images_for_report/hsv_hls_channel2.PNG" width="600" alt="Combined" title="Combined"/>
+<img src="images_for_report/hsv_hls_channel2.PNG" width="800" alt="Combined" title="Combined"/>
 
 #### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
@@ -92,7 +92,7 @@ offsety = 20
 I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
 
 
-<img src="images_for_report/perspective2.PNG" width="450" alt="perspective" title="perspective"/>
+<img src="images_for_report/perspective2.PNG" width="800" alt="perspective" title="perspective"/>
 
 #### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
