@@ -41,7 +41,7 @@ I then used the output `objpoints` and `imgpoints` to compute the camera calibra
 
 The image below depicts the results of applying undistort, using the calibration and distortion coefficients, to one of the chessboard images example
 
-<img src="images_for_report/orginalChart.png" width="450" alt="orginal image" title="orginal image"/>*orginal image*  <img src="images_for_report/undistorted.png" width="450" alt="undistorted image" title="undistorted image"/> *undistorted image*
+<img src="images_for_report/orginalChart.png" width="450" alt="orginal image" title="orginal image"/>*  <img src="images_for_report/undistorted.png" width="450" alt="undistorted image" title="undistorted image"/> orginal image* *undistorted image*
 
 ### Pipeline (single images)
 
