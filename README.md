@@ -37,39 +37,39 @@ I then used the output `objpoints` and `imgpoints` to compute the camera calibra
 
 
 
-<img src="images_for_report/calib1.png" width="350" alt="calibration image1"/>  <img src="images_for_report/calib2.png" width="350" alt="calibration image2"/>
+<img src="images_for_report/calib1.png" width="450" alt="calibration image1"/>  <img src="images_for_report/calib2.png" width="450" alt="calibration image2"/>
 
 The image below depicts the results of applying undistort, using the calibration and distortion coefficients, to one of the chessboard images example
 
-<img src="images_for_report/orginalChart.png" width="300" alt="orginal image"/>  <img src="images_for_report/undistorted.png" width="300" alt="undistorted image"/>
+<img src="images_for_report/orginalChart.png" width="450" alt="orginal image" title="orginal image"/>  <img src="images_for_report/undistorted.png" width="450" alt="undistorted image" title="undistorted image"/>
 
 ### Pipeline (single images)
 
 #### 1. Example of a distortion-corrected image
 To undistort the warped image, I applied “cv2.undistort” from OpenCV and used the coefficients and transformation found from “cv2.calibrateCamera”. The following pictures show the undistorted image results.
 
-<img src="images_for_report/orginal_distorted.png" width="300" alt="orginal image"/>  <img src="images_for_report/undistorted_img.png" width="300" alt="undistorted image"/>
+<img src="images_for_report/orginal_distorted.png" width="450" alt="orginal image" title="orginal image"/>  <img src="images_for_report/undistorted_img.png" width="450" alt="undistorted image" title="undistorted image"/>
 
 
 #### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 I defined two individual function for create a binary image for both gradient and color threshold.  “gradient_thresh” function takes the image and apply the gradient based on the different directions or combined input (x, y, magnitude, direction).
 
-<img src="images_for_report/original1.png" width="300" alt="orginal image"/>  <img src="images_for_report/gradient_x.png" width="300" alt="sobel in x-direction"/>
+<img src="images_for_report/original1.png" width="450" alt="orginal image" title="orginal image"/>  <img src="images_for_report/gradient_x.png" width="450" alt="sobel in x-direction"/>
 
 “color_thresh” function takes the image and convert the image to HLS form. I tested different channel of HLS for different lighting condition.
 
-<img src="images_for_report/original1.png" width="300" alt="orginal image"/>  <img src="images_for_report/s_channel.png" width="300" alt="S channel"/>
+<img src="images_for_report/original1.png" width="450" alt="orginal image" title="orginal image"/>  <img src="images_for_report/s_channel.png" width="450" alt="S channel" title="S channel"/>
 
-<img src="images_for_report/original1.png" width="300" alt="orginal image"/>  <img src="images_for_report/L_channel.png" width="300" alt="L channel"/>
+<img src="images_for_report/original1.png" width="450" alt="orginal image" title="orginal image"/>  <img src="images_for_report/L_channel.png" width="450" alt="L channel" title="L channel"/>
 
 
 After testing for different lighting condition and different scenarios, I concluded that L-channel has the best affect on capturing the white lines while the other filter might pick the other part of the road as a lane. The only drawback of the L-channel is, it fails for capturing the other color like yellow. Therefore, to address this problem I used HSV filter to specifically address the yellow color.
 
-<img src="images_for_report/original2.png" width="300" alt="orginal image"/>  <img src="images_for_report/hsv_channel.png" width="300" alt="HSV channel"/>
+<img src="images_for_report/original2.png" width="450" alt="orginal image" title="orginal image"/>  <img src="images_for_report/hsv_channel.png" width="450" alt="HSV channel" title="HSV channel"/>
 
 Then, I combined the HLS and HLV results for final results.
 
-<img src="images_for_report/original2.png" width="300" alt="orginal image"/>  <img src="images_for_report/hsv_hls_channel.png" width="300" alt="Combined"/>
+<img src="images_for_report/original2.png" width="450" alt="orginal image" title="orginal image"/>  <img src="images_for_report/hsv_hls_channel.png" width="450" alt="Combined" title="Combined"/>
 
 #### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
@@ -92,7 +92,7 @@ offsety = 20
 I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
 
 
-<img src="images_for_report/original2.png" width="300" alt="orginal image"/>  <img src="images_for_report/prespective.png" width="300" alt="perspective"/>
+<img src="images_for_report/original2.png" width="450" alt="orginal image" title="orginal image"/>  <img src="images_for_report/prespective.png" width="450" alt="perspective" title="perspective"/>
 
 #### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
@@ -108,7 +108,7 @@ Next, in order to avoid calculating the sliding windows each time, I tried to na
 
 #### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 I defined a function “measure_curvature_pixels” to measure the curvature of the each lane line according to the following equation:
-R_cuve=〖(1+〖2Ay+B〗^2)〗^(3⁄2)/|2A| 
+R_cuve=[(1+(2Ay+B)^2)]^(3⁄2)/|2A| 
 Where A and B are coefficients of a quadratic equation
 f(y)=Ay^2+By+C
 The y is the values of the image increase from top to bottom. In this equation I selected the maximum value of the y which occurs at the bottom of the image where the lines start.
@@ -116,9 +116,13 @@ Therefore, the radius of the curve is the average of left and right lines.
 I also calculated the position of the center of the car with respect to the center of the lanes.
 
 left_fit_poly = left_fit[0]*yMax**2 + left_fit[1]*yMax + left_fit[2]
+
 right_fit_poly = right_fit[0]*yMax**2 + right_fit[1]*yMax + right_fit[2]
+
 mid_fit_poly = (left_fit_poly+right_fit_poly)/2
+
 car_center = (img_size[1]/2)*xm_per_pix
+
 car_pos_wrt_lane = car_center - mid_fit_poly
 
 
