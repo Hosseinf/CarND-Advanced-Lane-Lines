@@ -26,14 +26,32 @@ The goals / steps of this project are the following:
 * Warp the detected lane boundaries back onto the original image.
 * Output visual display of the lane boundaries and numerical estimation of lane curvature and vehicle position.
 
-The images for camera calibration are stored in the folder called `camera_cal`.  The images in `test_images` are for testing your pipeline on single frames.  If you want to extract more test images from the videos, you can simply use an image writing method like `cv2.imwrite()`, i.e., you can read the video in frame by frame as usual, and for frames you want to save for later you can write to an image file.  
+### Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
 
-To help the reviewer examine your work, please save examples of the output from each stage of your pipeline in the folder called `output_images`, and include a description in your writeup for the project of what each image shows.    The video called `project_video.mp4` is the video your pipeline should work well on.  
+### Camera Calibration
+#### 1. Briefly state how you computed the camera matrix and distortion coefficients. Provide an example of a distortion corrected calibration image.
 
-The `challenge_video.mp4` video is an extra (and optional) challenge for you if you want to test your pipeline under somewhat trickier conditions.  The `harder_challenge.mp4` video is another optional challenge and is brutal!
+The code for this step is defined in function ‘camera_calib’.
+I start by preparing "object points", which will be the (x, y, z) coordinates of the chessboard corners in the world. Here I am assuming the chessboard is fixed on the (x, y) plane at z=0, such that the object points are the same for each calibration image.  Thus, `objp` is just a replicated array of coordinates, and `objpoints` will be appended with a copy of it every time I successfully detect all chessboard corners in a test image.  `imgpoints` will be appended with the (x, y) pixel position of each of the corners in the image plane with each successful chessboard detection.  
+I then used the output `objpoints` and `imgpoints` to compute the camera calibration and distortion coefficients using the `cv2.calibrateCamera()` function.  I applied this distortion correction to the test image using the `cv2.undistort()` function and obtained this result: 
 
-If you're feeling ambitious (again, totally optional though), don't stop there!  We encourage you to go out and take video of your own, calibrate your camera and show us how you would implement this project from scratch!
 
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
+images_for_report
+![calibration image1](images_for_report/calib1.png)  |  ![calibration image2](images_for_report/calib2.png)
 
+The image below depicts the results of applying undistort, using the calibration and distortion coefficients, to one of the chessboard images example
+
+![orginal image](images_for_report/orginalChart.png)  |  ![undistorted image](images_for_report/undistorted.png)
+
+### Pipeline (single images)
+
+#### 1. Example of a distortion-corrected image
+To undistort the warped image, I applied “cv2.undistort” from OpenCV and used the coefficients and transformation found from “cv2.calibrateCamera”. The following pictures show the undistorted image results.
+
+![orginal image](images_for_report/orginal_distorted.png)  |  ![undistorted image](images_for_report/undistorted_img.png)
+
+
+#### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
+I defined two individual function for create a binary image for both gradient and color threshold.  “gradient_thresh” function takes the image and apply the gradient based on the different directions or combined input (x, y, magnitude, direction).
+
+![orginal image](images_for_report/original1.png)  |  ![undistorted image](images_for_report/gradient_x.png)
