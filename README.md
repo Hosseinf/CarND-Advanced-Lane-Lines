@@ -37,7 +37,7 @@ I then used the output `objpoints` and `imgpoints` to compute the camera calibra
 
 
 images_for_report
-![calibration image1](images_for_report/calib1.png)  |  ![calibration image2](images_for_report/calib2.png)
+<img src="images_for_report/calib1.png" width="300" alt="calibration image1"/>  <img src="images_for_report/calib2.png" width="300" alt="calibration image2"/>
 
 The image below depicts the results of applying undistort, using the calibration and distortion coefficients, to one of the chessboard images example
 
