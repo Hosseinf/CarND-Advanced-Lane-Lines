@@ -5,13 +5,13 @@ import matplotlib.image as mpimg
 import math
 import os
 
-from line import Line
+# from line import Line
 # Import everything needed to edit/save/watch video clips
 from moviepy.editor import VideoFileClip
 # from IPython.display import HTML
 
 
-class Driver():
+class Line():
 	def __init__(self):
 		self.imgpoints = []
 		self.objpoints = []
@@ -30,7 +30,7 @@ class Driver():
 		self.right_fit_list = []
 
 		# number of frame that is needed to average through the polynomial coefficients
-		self.Nframe = 5
+		self.Nframe = 20
 
 		# counter for number of frame 
 		self.frame_num = 0
@@ -46,6 +46,8 @@ class Driver():
 		# curvature of the lines
 		self.left_curverad = 0
 		self.right_curverad = 0
+
+		self.type = []
 
 
 
@@ -67,7 +69,7 @@ class Driver():
 
 	def camera_calib(self):
 
-		Dir = r'C:\Users\hosse\Documents\UDACITY\full_self_driving_car\CarND-Advanced-Lane-Lines\camera_cal/'
+		Dir = r'C:\Users\hosse\Documents\UDACITY\CarND-Advanced-Lane-Lines\camera_cal/'
 
 		image_list = os.listdir(Dir)
 
@@ -78,9 +80,6 @@ class Driver():
 		# create object points (this is the points of real object which in this case is the chaseboard)
 		objp = np.zeros((nx*ny,3), np.float32)
 		objp[:,:2] = np.mgrid[0:nx,0:ny].T.reshape(-1,2)
-
-		# print (objp)
-
 
 
 		for im in image_list:
@@ -103,7 +102,6 @@ class Driver():
 				self.imgpoints.append(corners)
 				self.objpoints.append(objp)
 
-
 				# plt.imshow(img)
 				# plt.show()
 
@@ -111,16 +109,10 @@ class Driver():
 		# find the transform matirx and distortion coefficient
 		ret, self.mtx, self.dist, rvec, tvec = cv2.calibrateCamera(self.objpoints, self.imgpoints, gray_scale.shape[::-1], None, None)
 
-		print(self.mtx)
-		print (self.dist)
-
 
 	def undistort(self, img):
 		# undistort the image
 		undist_img = cv2.undistort(img, self.mtx, self.dist, None, self.mtx)
-
-		# plt.imshow(undist_img)
-		# plt.show()
 
 		return undist_img
 
@@ -168,7 +160,7 @@ class Driver():
 
 		# binary_img[(S>thresh_low) & (S<thresh_high) ] = 1
 
-		binary_img[(L>170) & (L<255) ] = 1
+		binary_img[(L>200) & (L<255) ] = 1
 
 
 		# Convert BGR to HSV
@@ -202,7 +194,6 @@ class Driver():
 		binary_img = np.zeros_like(S)
 
 		binary_img[((S>color_thresh_low) & (S<color_thresh_high)) | ((scale_sobel>grad_thresh_low) & (scale_sobel<grad_thresh_high)) ] = 1
-		# & (((scale_sobel_d>np.pi/6) & (scale_sobel_d<np.pi/3)))
 
 		return binary_img
 
@@ -232,15 +223,13 @@ class Driver():
 		# find the mid point
 		mid_point = int(img_size[1]/2)
 
-		print ('mid_point=', mid_point)
-
 		# find the max index for both sides
 		left_max_ind = np.argmax(histogram[:mid_point])
 		right_max_ind = mid_point + np.argmax(histogram[mid_point:])
 
-		print ('histogram size= ', len(histogram))
-		print ('left_max_ind= ', left_max_ind)
-		print ('right_max_ind= ', right_max_ind)
+		# print ('histogram size= ', len(histogram))
+		# print ('left_max_ind= ', left_max_ind)
+		# print ('right_max_ind= ', right_max_ind)
 
 		return left_max_ind, right_max_ind
 
@@ -297,14 +286,6 @@ class Driver():
 			win_right_idx = ((nonzerox>right_win_x_low) & (nonzerox<right_win_x_high) & (nonzeroy>win_y_low) & (nonzeroy<win_y_high)).nonzero()[0]
 
 
-			# print('win_left_idx=',win_left_idx)
-			# print('nonzerox=',nonzerox[win_left_idx])
-
-			# print ('(nonzerox>left_win_x_low) =', (nonzerox>left_win_x_low).nonzero()[0])
-
-			# print ('(nonzerox>left_win_x_low) ======', nonzerox[(nonzerox>left_win_x_low).nonzero()[0]])
-
-
 			# add the pixel of each window to the list
 			left_lane_idx.append(win_left_idx)
 			right_lane_idx.append(win_right_idx)
@@ -353,22 +334,22 @@ class Driver():
 	def fit_ploy(self, img, leftx, lefty, rightx, righty):
 
 		# generate the polynomial coefficient
-		if (len(leftx)>5 or len(lefty)>5):
+		if (len(leftx)>300 or len(lefty)>300):
 			left_fit = np.polyfit(lefty, leftx, 2)
 		else:
 			left_fit = self.left_fit
-		if (len(rightx)>5 or len(righty)>5):
+		if (len(rightx)>300 or len(righty)>300):
 			right_fit = np.polyfit(righty, rightx, 2)
 		else:
 			right_fit = self.right_fit
 
-		left_curverad, right_curverad = self.measure_curvature_pixels(leftx, lefty, rightx, righty, img)
+		left_curverad, right_curverad, car_pos_wrt_lane = self.measure_curvature_pixels(leftx, lefty, rightx, righty, img)
 
 		print ('right_curverad=',right_curverad)
 		print ('left_curverad=',left_curverad)
 
 		# update the polynomial coefficient if it is reasonable
-		if (np.abs(np.abs(left_curverad) - np.abs(self.left_curverad)) < 300) and (self.left_curverad != 0):
+		if ((np.abs(np.abs(left_curverad) - np.abs(self.left_curverad)) < 300) and (self.left_curverad != 0)) or (self.type=='image'):
 			self.left_fit = left_fit
 			self.left_curverad = left_curverad
 			print ('left lane is updated')
@@ -379,14 +360,18 @@ class Driver():
 			print ('left lane is updated only once')
 
 
-		if (np.abs(np.abs(right_curverad) - np.abs(self.right_curverad)) < 600) and (self.right_curverad != 0):
+		if ((np.abs(np.abs(right_curverad) - np.abs(self.right_curverad)) < 1000) and (self.right_curverad != 0)) or (self.type=='image'):
 			self.right_fit = right_fit
 			self.right_curverad = right_curverad
+			print ('right lane is updated')
 
 		if self.right_curverad == 0:
 			self.right_fit = right_fit
 			self.right_curverad = right_curverad
 
+
+		self.left_fit_list.append(self.left_fit)
+		self.right_fit_list.append(self.right_fit)
 
 		# smoothing the results
 		if len(self.left_fit_list) == self.Nframe:
@@ -414,9 +399,6 @@ class Driver():
 		# generate the y values
 		yValue = np.linspace(0, img.shape[0]-1, img.shape[0])
 
-		# xValue_left = left_fit[0]*yValue**2 + left_fit[1]*yValue + left_fit[2]
-		# xValue_right = right_fit[0]*yValue**2 + right_fit[1]*yValue + right_fit[2]
-
 		
 		# evaluate the x value
 		xValue_left = left_fitx(yValue)
@@ -427,7 +409,7 @@ class Driver():
 
 		# plt.show()
 
-		return xValue_left, xValue_right, yValue
+		return xValue_left, xValue_right, yValue, left_curverad, right_curverad, car_pos_wrt_lane
 
 
 
@@ -454,7 +436,7 @@ class Driver():
 		rightx = nonzerox[right_lane_idx]
 		righty = nonzeroy[right_lane_idx]
 
-		xValue_left, xValue_right, yValue = self.fit_ploy(img, leftx, lefty, rightx, righty)
+		xValue_left, xValue_right, yValue, left_curverad, right_curverad, car_pos_wrt_lane = self.fit_ploy(img, leftx, lefty, rightx, righty)
 
 
 		# visualization
@@ -483,35 +465,27 @@ class Driver():
 
 		final_img = cv2.addWeighted(out_img, 1, window_img, 0.3, 0)
 
-		# plt.plot(xValue_left, yValue, color ='yellow')
-		# plt.plot(xValue_right, yValue, color ='yellow')
 
 
-		# measure the curvature of the lane lines
-		# left_curverad, right_curverad = self.measure_curvature_pixels(leftx, lefty, rightx, righty, img)
-		# print ('right_curverad=',right_curverad)
-		# print ('left_curverad=',left_curverad)
-
-		# print(left_line_pts)
 		# plt.imshow(final_img, cmap='gray')
 		# plt.show()
 
 
-		if (len(leftx)>0 and len(lefty)>0):
+		if (len(leftx)>2500 and len(lefty)>2500):
 			self.left_detected = True
-			self.left_fit_list.append(self.left_fit)
+			# self.left_fit_list.append(self.left_fit)
 		else:
 			self.left_detected = False
 
-		if (len(rightx)>0 and len(righty)>0):
+		if (len(rightx)>2500 and len(righty)>2500):
 			self.right_detected = True
-			self.right_fit_list.append(self.right_fit)
+			# self.right_fit_list.append(self.right_fit)
 		else:
 			self.right_detected = False
 
-		print (self.left_fit_list)
+		# print (self.left_fit_list)
 
-		return final_img, xValue_left, xValue_right, yValue
+		return final_img, xValue_left, xValue_right, yValue, left_curverad, right_curverad, car_pos_wrt_lane
 
 
 	def measure_curvature_pixels(self, leftx, lefty, rightx, righty, img):
@@ -521,7 +495,7 @@ class Driver():
 		# calculate the histogram
 		left_ind, right_ind = self.hist(img)
 		diff_pixel = right_ind - left_ind
-		print('diff_pixel=',diff_pixel)
+		# print('diff_pixel=',diff_pixel)
 
 		ym_per_pix = 30/img_size[0]  # meters per pixel in y dimension
 		xm_per_pix = 3.7/diff_pixel # meters per pixel in x dimension
@@ -545,8 +519,6 @@ class Driver():
 		# generate the y values
 		yValue = np.linspace(0, img.shape[0]-1, img.shape[0])
 
-
-
 		# find the maximum y point
 		yMax = np.max(yValue*ym_per_pix)
 
@@ -559,7 +531,17 @@ class Driver():
 		self.right_fit_curv = right_fit
 
 
-		return left_curverad, right_curverad
+		# calculate the position of the vehicle with respect to center
+		left_fit_poly = left_fit[0]*yMax**2 + left_fit[1]*yMax + left_fit[2]
+		right_fit_poly = right_fit[0]*yMax**2 + right_fit[1]*yMax + right_fit[2]
+		mid_fit_poly = (left_fit_poly+right_fit_poly)/2
+
+		car_center = (img_size[1]/2)*xm_per_pix
+
+		car_pos_wrt_lane = car_center - mid_fit_poly
+
+
+		return left_curverad, right_curverad, car_pos_wrt_lane
 
 
 
@@ -589,15 +571,46 @@ class Driver():
 		return result
 
 
+	def draw_data(self, img, left_curverad, right_curverad, car_pos_wrt_lane):
+
+
+		font = cv2.FONT_HERSHEY_SIMPLEX 
+
+		lane_radious = (left_curverad+right_curverad)/2
+
+		# Use putText() method for 
+		# inserting text on video 
+		if car_pos_wrt_lane > 0:
+			dir = 'left '
+		else:
+			dir = 'right '
+		text1 = 'radius of the curve: ' + str(format(lane_radious, '.2f'))
+		text2 = dir + 'of center: ' + str(format(car_pos_wrt_lane, '.2f'))
+		cv2.putText(img,  
+		            text1,  
+		            (40,70),  
+		            font, 1,  
+		            (0, 255, 255),  
+		            2,  
+		            cv2.LINE_4) 
+
+		cv2.putText(img,  
+			        text2,  
+			        (40,120),  
+			        font, 1,  
+			        (0, 255, 255),  
+			        2,  
+			        cv2.LINE_4) 
+
+		return img
+
+
+
 	def line_drawer(self, img):
 
 		original = np.copy(img)
 
 		self.frame_num += 1
-		print ('self.frame_num = ', self.frame_num)
-
-		# plt.imshow(img, cmap='gray')
-		# plt.show()
 
 
 		offsetx = 300
@@ -605,79 +618,72 @@ class Driver():
 		h,w,c = img.shape
 		# self.src = np.float32([[img.shape[1]/2.11, img.shape[0]/1.64], [img.shape[1]/4.98, img.shape[0]/1.07], [img.shape[1]/1.21, img.shape[0]/1.07], [img.shape[1]/1.899, img.shape[0]/1.64]])
 		# # self.src = np.float32([[img.shape[1]/1.97, img.shape[0]/1.55], [img.shape[1]/4.29, img.shape[0]/1.05], [img.shape[1]/1.18, img.shape[0]/1.05], [img.shape[1]/1.787, img.shape[0]/1.55]])
-		self.dst = np.float32([[offsetx,offsety], [offsetx, img.shape[0]-offsety], [img.shape[1]-offsetx, img.shape[0]-offsety], [img.shape[1]-offsetx, offsety]])
+		self.dst = np.float32([[offsetx,offsety],
+							 [offsetx, img.shape[0]-offsety], 
+							 [img.shape[1]-offsetx, img.shape[0]-offsety], 
+							 [img.shape[1]-offsetx, offsety]])
+		self.src = np.float32([[img.shape[1]/2.22, img.shape[0]/1.55],
+							 [img.shape[1]/4.96, img.shape[0]/1.055],
+							 [img.shape[1]/1.22, img.shape[0]/1.055], 
+							 [img.shape[1]/1.81, img.shape[0]/1.55]])
 
 
-		self.src = np.float32([(575,464),
-		                  (258,682), 
-		                  (1049,682),
-		                  (707,464)])
-		# self.dst = np.float32([(450,0),
-		#                   (w-450,0),
-		#                   (450,h),
-		#                   (w-450,h)])
-
-		# Dir = r'C:\Users\hosse\Documents\UDACITY\full_self_driving_car\CarND-Advanced-Lane-Lines\camera_cal/'
-		# im = 'calibration2.jpg'
-		# img = driver.read_img(Dir + im)
 
 		# undistort the image
-		img = driver.undistort(img)
-
-		print(img.shape)
+		img = self.undistort(img)
 
 		# plt.imshow(img, cmap='gray')
 		# plt.show()
 
+
 		# apply gradient threshold to the image
-		# img,b = driver.gradient_thresh(img,'x',50,200, 9)
+		# img,b = self.gradient_thresh(img,'x',50,200, 9)
+
 
 		# apply the color threshold to the image
-		img, s = driver.color_thresh(img,100,255)
+		img, s = self.color_thresh(img,100,255)
 
 		# apply the prespective to the image
 		img = self.perspective(img)
 
+
 		# apply the cobined threshold for color and grad
 		# img = self.cobined_grad_color_thresh(img, 'x',50,200, 9, 100,255)
-		# img = self.cobined_grad_color_thresh(img, 'x',50,240, 9, 100,255)
 
-		# img,b = driver.gradient_thresh(img,'dir',np.pi/6,np.pi/3, 9)
-		# img,b = driver.gradient_thresh(img,'x',50,200, 9)
-		# img, b = driver.color_thresh(img,100,255)
-
-		# plt.imshow(img, cmap='gray')
-		# plt.show()
+		# img,b = self.gradient_thresh(img,'dir',np.pi/6,np.pi/3, 9)
+		# img,b = self.gradient_thresh(img,'x',50,200, 9)
 
 
-		if (self.right_detected == False) or (self.left_detected == False):
+		if (self.type == 'image'):
 			# find the approximate position of the lane lines
 			left_max_ind, right_max_ind = self.hist(img)
 			# find the left and right lane's points
 			leftx, lefty, rightx, righty, img3 = self.line_detection(img, left_max_ind, right_max_ind)
 			# fit a polynomial on the detected points
-			xValue_left, xValue_right, yValue = self.fit_ploy(img, leftx, lefty, rightx, righty)
+			xValue_left, xValue_right, yValue, left_curverad, right_curverad, car_pos_wrt_lane = self.fit_ploy(img, leftx, lefty, rightx, righty)
 
 		else:
 
-			print('****************************************************************')
-			img3, xValue_left, xValue_right, yValue = self.search_around_poly(img)
+			if (self.right_detected == False) or (self.left_detected == False):
+				# find the approximate position of the lane lines
+				left_max_ind, right_max_ind = self.hist(img)
+				# find the left and right lane's points
+				leftx, lefty, rightx, righty, img3 = self.line_detection(img, left_max_ind, right_max_ind)
+				# fit a polynomial on the detected points
+				xValue_left, xValue_right, yValue, left_curverad, right_curverad, car_pos_wrt_lane = self.fit_ploy(img, leftx, lefty, rightx, righty)
+
+			else:
+
+				print('****************************************************************')
+				img3, xValue_left, xValue_right, yValue, left_curverad, right_curverad, car_pos_wrt_lane = self.search_around_poly(img)
 
 
-		# # find the approximate position of the lane lines
-		# left_max_ind, right_max_ind = self.hist(img)
-		# # find the left and right lane's points
-		# leftx, lefty, rightx, righty, img3 = self.line_detection(img, left_max_ind, right_max_ind)
-		# # fit a polynomial on the detected points
-		# xValue_left, xValue_right, yValue = self.fit_ploy(img, leftx, lefty, rightx, righty)
 
 		img3 = self.project_lane_line(img3, original, xValue_left, xValue_right, yValue)
 
 
+		img3 = self.draw_data(img3, left_curverad, right_curverad, car_pos_wrt_lane)
 
-		# print (img.shape)
-		# plt.imshow(img3, cmap='gray')
-		# plt.show()
 
 		return img3
 
@@ -685,79 +691,81 @@ class Driver():
 
 # initialize the code here
 line = Line()
-print(line.detected)
-driver = Driver()
 
-Dir = r'C:\Users\hosse\Documents\UDACITY\full_self_driving_car\CarND-Advanced-Lane-Lines\test_images/'
+Dir = r'C:\Users\hosse\Documents\UDACITY\CarND-Advanced-Lane-Lines\test_images/'
 
-save_Dir = r'C:\Users\hosse\Documents\UDACITY\full_self_driving_car\CarND-Advanced-Lane-Lines\output_images/'
+save_Dir = r'C:\Users\hosse\Documents\UDACITY\CarND-Advanced-Lane-Lines\output_images/'
 
 image_list = os.listdir(Dir)
 
 # calibrate the camera
-driver.camera_calib()
+line.camera_calib()
 
-# for im in image_list:
-# 	img = driver.read_img(Dir + im)
+# select type of media you are testing 'image' or 'video'
+type = 'video'
 
-# 	img = driver.line_drawer(img)
+if type == 'image':
 
-# 	plt.imshow(img, cmap='gray')
-# 	plt.show()
+	line.type = 'image'
 
-# 	image_name = save_Dir+im+'.jpg'
-# 	cv2.imwrite(image_name, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
+	for im in image_list:
+		img = line.read_img(Dir + im)
 
-# example image
-im = 'test2.jpg'
-img = driver.read_img(Dir + im)
-img = driver.line_drawer(img)
+		img = line.line_drawer(img)
+
+		plt.imshow(img, cmap='gray')
+		plt.show()
+
+		image_name = save_Dir+im+'.jpg'
+		cv2.imwrite(image_name, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
+
+else:
+
+	# run the video frame
+	video_Dir = r'C:\Users\hosse\Documents\UDACITY\CarND-Advanced-Lane-Lines/'
+
+	# capture the video
+	cap = cv2.VideoCapture(video_Dir+'test_videos\challenge_video.mp4')
+
+	## create an object to generate a video from the frame
+	fourcc = cv2.VideoWriter_fourcc(*'XVID')
+	# output video path
+	VideoOut = video_Dir + 'test_video_output/videos/challenge_video.avi'
+	# frame rate
+	fps = 15
+	# find the frame size
+	ret, frame = cap.read()
+	height, width, layers = frame.shape
+	size = (width,height)
+	out = cv2.VideoWriter(VideoOut,fourcc, fps, size)
+
+	line.type = 'video'
+	i=0
+	while(cap.isOpened()):
+	    ret, frame = cap.read()
+
+	    # plt.imshow(frame, cmap='gray')
+	    # plt.show()
+	    if ret == False:
+	        break
+	    print ('frame size = ', frame.shape)
+	    if i % 1 == 0:
+
+	    	frame = line.line_drawer(frame)
+
+	    	# save each frame of the video
+	    	# save_dist = video_Dir + 'test_video_output/'+'frame'+str(i)+'.png'
+	    	# cv2.imwrite(save_dist,frame)
+
+	    	# add all the frame to the list for creating a video
+	    	out.write(frame)
+
+	    i+=1
 
 
-# run the video frame
-video_Dir = r'C:\Users\hosse\Documents\UDACITY\full_self_driving_car\CarND-Advanced-Lane-Lines/'
 
-# capture the video
-cap = cv2.VideoCapture(video_Dir+'test_videos\challenge_video.mp4')
-
-## create an object to generate a video from the frame
-fourcc = cv2.VideoWriter_fourcc(*'XVID')
-# output video path
-VideoOut = video_Dir + 'test_video_output/videos/challenge_video.avi'
-# frame rate
-fps = 15
-# find the frame size
-ret, frame = cap.read()
-height, width, layers = frame.shape
-size = (width,height)
-out = cv2.VideoWriter(VideoOut,fourcc, fps, size)
-
-i=0
-while(cap.isOpened()):
-    ret, frame = cap.read()
-
-    # plt.imshow(frame, cmap='gray')
-    # plt.show()
-    if ret == False:
-        break
-    print ('frame size = ', frame.shape)
-    if i % 1 == 0:
-
-    	frame = driver.line_drawer(frame)
-
-    	# save each frame of the video
-    	# save_dist = video_Dir + 'test_video_output/'+'frame'+str(i)+'.png'
-    	# cv2.imwrite(save_dist,frame)
-
-    	# add all the frame to the list for creating a video
-    	out.write(frame)
-
-    i+=1
-
-
-
-out.release()
-cap.release()
-cv2.destroyAllWindows()
+	out.release()
+	cap.release()
+	cv2.destroyAllWindows()
 
 
